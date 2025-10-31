@@ -1,0 +1,187 @@
+{
+  "UN2811": {
+    "ProperShippingName": "Giftiger organischer fester Stoff, n.a.g.",
+    "ProperShippingName_EN": "Toxic solid, organic, n.o.s.",
+    "Class": "6.1",
+    "PackingGroups": {
+      "I": {
+        "Passenger": {
+          "PI": "666",
+          "MaxNetQuantityPerPackage": "verboten"
+        },
+        "Cargo": {
+          "PI": "673",
+          "MaxNetQuantityPerPackage": "50 kg"
+        },
+        "EQ": "E5",
+        "LQ": "verboten",
+        "DeMinimis": true
+      },
+      "II": {
+        "Passenger": {
+          "PI": "669",
+          "MaxNetQuantityPerPackage": "25 kg"
+        },
+        "Cargo": {
+          "PI": "676",
+          "MaxNetQuantityPerPackage": "200 kg"
+        },
+        "EQ": "E4",
+        "LQ": "1 kg",
+        "DeMinimis": true
+      },
+      "III": {
+        "Passenger": {
+          "PI": "670",
+          "MaxNetQuantityPerPackage": "100 kg"
+        },
+        "Cargo": {
+          "PI": "677",
+          "MaxNetQuantityPerPackage": "200 kg"
+        },
+        "EQ": "E1",
+        "LQ": "10 kg",
+        "DeMinimis": true
+      }
+    }
+  },
+  "UN3077": {
+    "ProperShippingName": "Umweltgefährdender Stoff, fest, n.a.g.",
+    "ProperShippingName_EN": "Environmentally hazardous substance, solid, n.o.s.",
+    "Class": "9",
+    "PackingGroups": {
+      "III": {
+        "Passenger": {
+          "PI": "956",
+          "MaxNetQuantityPerPackage": "400 kg"
+        },
+        "Cargo": {
+          "PI": "956",
+          "MaxNetQuantityPerPackage": "400 kg"
+        },
+        "EQ": "E1",
+        "LQ": "30 kg G",
+        "DeMinimis": true
+      }
+    }
+  },
+  "UN1170": {
+    "ProperShippingName": "Ethanol / Ethanol, Lösung",
+    "ProperShippingName_EN": "Ethanol / Ethanol solution",
+    "Class": "3",
+    "PackingGroups": {
+      "II": {
+        "Passenger": {
+          "PI": "353",
+          "MaxNetQuantityPerPackage": "5 L"
+        },
+        "Cargo": {
+          "PI": "364",
+          "MaxNetQuantityPerPackage": "60 L"
+        },
+        "EQ": "E2",
+        "LQ": "1 L",
+        "DeMinimis": false
+      },
+      "III": {
+        "Passenger": {
+          "PI": "355",
+          "MaxNetQuantityPerPackage": "60 L"
+        },
+        "Cargo": {
+          "PI": "366",
+          "MaxNetQuantityPerPackage": "220 L"
+        },
+        "EQ": "E1",
+        "LQ": "10 L",
+        "DeMinimis": false
+      }
+    }
+  },
+  "UN2810": {
+    "ProperShippingName": "Giftiger organischer flüssiger Stoff, n.a.g.",
+    "ProperShippingName_EN": "Toxic liquid, organic, n.o.s.",
+    "Class": "6.1",
+    "PackingGroups": {
+      "I": {
+        "Passenger": {
+          "PI": "652",
+          "MaxNetQuantityPerPackage": "verboten"
+        },
+        "Cargo": {
+          "PI": "658",
+          "MaxNetQuantityPerPackage": "30 L"
+        },
+        "EQ": "E5",
+        "LQ": "verboten",
+        "DeMinimis": true
+      },
+      "II": {
+        "Passenger": {
+          "PI": "654",
+          "MaxNetQuantityPerPackage": "5 L"
+        },
+        "Cargo": {
+          "PI": "662",
+          "MaxNetQuantityPerPackage": "60 L"
+        },
+        "EQ": "E4",
+        "LQ": "1 L",
+        "DeMinimis": true
+      },
+      "III": {
+        "Passenger": {
+          "PI": "655",
+          "MaxNetQuantityPerPackage": "60 L"
+        },
+        "Cargo": {
+          "PI": "663",
+          "MaxNetQuantityPerPackage": "220 L"
+        },
+        "EQ": "E1",
+        "LQ": "2 L",
+        "DeMinimis": true
+      }
+    }
+  },
+  "UN1046": {
+    "ProperShippingName": "Helium, verdichtet",
+    "ProperShippingName_EN": "Helium, compressed",
+    "Class": "2.2",
+    "PackingGroups": {
+      "—": {
+        "Passenger": {
+          "PI": "200",
+          "MaxNetQuantityPerPackage": "75 kg"
+        },
+        "Cargo": {
+          "PI": "200",
+          "MaxNetQuantityPerPackage": "150 kg"
+        },
+        "EQ": "E1",
+        "LQ": "verboten",
+        "DeMinimis": false
+      }
+    }
+  },
+  "UN1648": {
+    "ProperShippingName": "Acetonitril",
+    "ProperShippingName_EN": "Acetonitrile",
+    "Class": "3",
+    "PackingGroups": {
+      "II": {
+        "Passenger": {
+          "PI": "353",
+          "MaxNetQuantityPerPackage": "5 L"
+        },
+        "Cargo": {
+          "PI": "364",
+          "MaxNetQuantityPerPackage": "60 L"
+        },
+        "EQ": "E2",
+        "LQ": "1 L",
+        "DeMinimis": false
+      }
+    }
+  }
+}

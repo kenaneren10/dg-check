@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DG-Check · Layout-Update v4</title>
+  <style>
+    :root{ --brand:#007ac2; --brand-600:#0066a3; --text:#0B1F2A; --muted:#5B6B76; --line:#e6eef2; --panel:#fff;
+           --ok:#1F8A70; --warn:#B58100; --err:#C62828; --radius:14px; --shadow:0 6px 20px rgba(0,0,0,.06);
+           --focus:0 0 0 3px rgba(0,122,194,.25); }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{margin:0;background:#fbfdfe;color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif}
+    header{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--line);box-shadow:0 3px 18px rgba(0,0,0,.03)}
+    .wrap{max-width:980px;margin:auto;padding:1.1rem}
+    .brand{display:flex;gap:1rem;align-items:center}
+    .hex{--size:40px;width:var(--size);height:calc(var(--size)*0.866);position:relative;filter:drop-shadow(0 2px 6px rgba(0,0,0,.08))}
+    .hex:before,.hex:after{content:"";position:absolute;left:0;width:100%;height:100%;border:2px solid var(--brand);border-left:2.5px solid var(--brand);border-right:2.5px solid var(--brand);border-radius:6px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+    .hex:after{transform:scale(.88);border-color:#BFD9F0}
+    .hex-label{position:absolute;inset:0;display:grid;place-items:center;font-weight:700;font-size:.72rem;color:var(--brand-600);letter-spacing:.06em}
+    h1{font-size:1.05rem;margin:0 0 .1rem 0}
+    .subtitle{color:var(--muted);font-size:.9rem}
+    main{padding:1.2rem 0}
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:1rem 1.1rem;box-shadow:var(--shadow)}
+    .panel h2{margin:.1rem 0 1rem;font-size:1.02rem}
+    form .row{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+    form .row-3{grid-template-columns:1fr 1fr 1fr}
+    @media (max-width:760px){form .row,form .row-3{grid-template-columns:1fr}}
+    label{display:block;font-size:.9rem;color:var(--muted);margin:.35rem 0}
+    .field{display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:12px;padding:.55rem .6rem;gap:.35rem;position:relative}
+    input,select,textarea{background:transparent;border:0;color:var(--text);font-size:1rem;outline:none}
+    textarea{min-height:120px;white-space:pre-wrap}
+    input:focus,select:focus,textarea:focus{box-shadow:var(--focus);border-radius:10px}
+    .hint{font-size:.78rem;color:#215f83}
+    .actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.8rem;align-items:center}
+    .actions .spacer{flex:1}
+    button,.btn{border-radius:10px;border:1px solid var(--line);background:#fff;color:#0B1F2A;padding:.65rem .9rem;cursor:pointer;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.04);text-decoration:none;display:inline-block;font-size:1rem}
+    .primary{background:var(--brand);border:1px solid var(--brand);color:#fff}
+    .secondary{background:#fff;border:1px solid var(--line)}
+    .result{display:flex;flex-direction:column;gap:.7rem;border:1px solid var(--line);border-radius:12px;padding:.9rem;background:#fff;margin-top:0.8rem;white-space:pre-line}
+    .badge{padding:.18rem .5rem;border-radius:999px;font-size:.78rem;font-weight:700;display:inline-flex;gap:.4rem;align-items:center}
+    .ok{background:rgba(31,138,112,.12);color:#1F8A70;border:1px solid rgba(31,138,112,.28)}
+    .warn{background:rgba(181,129,0,.1);color:#B58100;border:1px solid rgba(181,129,0,.28)}
+    .err{background:rgba(198,40,40,.1);color:#C62828;border:1px solid rgba(198,40,40,.28)}
+    .line{height:1px;background:var(--line);margin:1rem 0}
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap brand">
+    <div class="hex"><div class="hex-label">DG</div></div>
+    <div>
+      <h1>DG-Check · Decision + Shipper’s Declaration</h1>
+      <div class="subtitle">Automatische Prüfung nach IATA-DGR – Demo Version v4</div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="panel">
+    <h2>Sendungsdaten</h2>
+    <form id="dg-form" novalidate>
+      <div class="row-3 row">
+        <div class="field">
+          <label for="un">UN-Nummer</label>
+          <input id="un" inputmode="numeric" pattern="\\d{4}" placeholder="z. B. 2811" required />
+        </div>
+        <div class="field">
+          <label for="pg">Verpackungsgruppe</label>
+          <select id="pg"><option value="" selected>n. a.</option><option>I</option><option>II</option><option>III</option></select>
+        </div>
+        <div class="field">
+          <label for="qty">Nettomenge je Versandstück</label>
+          <input id="qty" type="number" min="0" step="0.001" placeholder="z. B. 0.5" required />
+          <div class="hint">Einheit gemäß DGR (kg oder L)</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="primary">Prüfen</button>
+        <button type="button" class="secondary" id="btn-reset">Zurücksetzen</button>
+      </div>
+
+      <div id="result" class="result">
+        <span class="badge warn">Noch nicht geprüft</span>
+        <p>Gib Daten ein und klicke <em>Prüfen</em>.</p>
+      </div>
+    </form>
+  </section>
+</main>
+
+<script>
+let DG_DATABASE = {};
+fetch('iata_data_ready.json')
+  .then(res => res.json())
+  .then(data => DG_DATABASE = data)
+  .catch(err => console.error('Fehler beim Laden der IATA-Daten:', err));
+
+const EQ_TABLE = {
+  "E0": { allowed:false },
+  "E1": { allowed:true, maxInnerPkg:0.03, maxOuterPkg:1 },
+  "E2": { allowed:true, maxInnerPkg:0.5, maxOuterPkg:1 },
+  "E3": { allowed:true, maxInnerPkg:1, maxOuterPkg:1 },
+  "E4": { allowed:true, maxInnerPkg:0.5, maxOuterPkg:1 },
+  "E5": { allowed:true, maxInnerPkg:1, maxOuterPkg:1 }
+};
+
+function checkDG(unNumber, pg, weight) {
+  const data = DG_DATABASE["UN" + unNumber];
+  if (!data) return {error:`Keine Daten für UN ${unNumber}`};
+  const group = data.PackingGroups[pg] || data.PackingGroups["—"];
+  if (!group) return {error:`Keine Verpackungsgruppe ${pg} für UN ${unNumber}`};
+
+  const results = {};
+  const parseVal = val => {
+    if (val === "verboten") return null;
+    const n = parseFloat(val);
+    return isNaN(n) ? null : n;
+  };
+
+  // Passenger
+  const maxP = parseVal(group.Passenger.MaxNetQuantityPerPackage);
+  if (group.Passenger.PI === "Forbidden" || group.Passenger.MaxNetQuantityPerPackage === "verboten")
+    results.passenger = {status:"forbidden", text:"❌ Verboten (Passenger)"};
+  else if (maxP && weight <= maxP)
+    results.passenger = {status:"allowed", text:`✅ Erlaubt bis ${group.Passenger.MaxNetQuantityPerPackage} (PI ${group.Passenger.PI})`};
+  else if (maxP)
+    results.passenger = {status:"exceed", text:"❌ Gewicht überschreitet Limit (Passenger)"};
+  else
+    results.passenger = {status:"unknown", text:"⚠️ Keine Angabe"};
+
+  // Cargo
+  const maxC = parseVal(group.Cargo.MaxNetQuantityPerPackage);
+  if (maxC && weight <= maxC)
+    results.cargo = {status:"allowed", text:`✅ Erlaubt bis ${group.Cargo.MaxNetQuantityPerPackage} (PI ${group.Cargo.PI})`};
+  else if (group.Cargo.MaxNetQuantityPerPackage === "verboten")
+    results.cargo = {status:"forbidden", text:"❌ Verboten (Cargo)"};
+  else if (maxC)
+    results.cargo = {status:"exceed", text:"❌ Gewicht überschreitet Limit (Cargo)"};
+  else
+    results.cargo = {status:"unknown", text:"⚠️ Keine Angabe"};
+
+  // EQ
+  results.eq = checkEQ(group.EQ, weight);
+  // LQ
+  results.lq = checkLQ(group.LQ, weight);
+  // DeMinimis
+  results.deMinimis = checkDeMinimis(data, weight, group.DeMinimis);
+  // Empfehlung
+  results.recommendation = makeRecommendation(results);
+
+  return results;
+}
+
+function checkEQ(eqCode, weight) {
+  const eq = EQ_TABLE[eqCode];
+  if (!eq) return {status:"unknown", text:"❌ Kein EQ-Code"};
+  if (!eq.allowed) return {status:"forbidden", text:"❌ EQ nicht erlaubt"};
+  if (weight <= eq.maxInnerPkg) return {status:"allowed", text:`✅ EQ erlaubt (max ${eq.maxInnerPkg} kg)`};
+  return {status:"exceed", text:`❌ Überschreitet EQ-Grenze (${eq.maxInnerPkg} kg)`};
+}
+
+function checkLQ(limit, weight) {
+  if (!limit || limit === "verboten") return {status:"forbidden", text:"❌ LQ nicht erlaubt"};
+  const val = parseFloat(limit);
+  if (isNaN(val)) return {status:"unknown", text:"⚠️ LQ unklar"};
+  return weight <= val ? {status:"allowed", text:`✅ LQ erlaubt (max ${limit})`} : {status:"exceed", text:`❌ LQ überschritten (${limit})`};
+}
+
+function checkDeMinimis(data, weight, allowed) {
+  const restricted = ["1","2","5.2","6.2","7"];
+  if (restricted.includes(data.Class)) return {status:"forbidden", text:"❌ Keine De-Minimis-Regel (Klasse)"};
+  if (!allowed) return {status:"forbidden", text:"❌ Nicht erlaubt laut DGR 2.6"};
+  if (weight < 0.001) return {status:"allowed", text:"✅ De Minimis anwendbar (<1 g / ml)"};
+  return {status:"exceed", text:"❌ Gewicht zu hoch für De Minimis"};
+}
+
+function makeRecommendation(r) {
+  const p=r.passenger.status, c=r.cargo.status, eq=r.eq.status, lq=r.lq.status, dm=r.deMinimis.status;
+  if (p==="forbidden"&&c==="forbidden") return {text:"❌ Versand nicht erlaubt laut IATA-DGR."};
+  if (dm==="allowed") return {text:"✅ Versand als De-Minimis-Sendung ohne Deklaration möglich."};
+  if (eq==="allowed") return {text:"✅ Versand als Excepted Quantity (EQ) möglich – bevorzugte Option."};
+  if (lq==="allowed") return {text:"✅ Versand als Limited Quantity (LQ) möglich – Kennzeichnung erforderlich."};
+  if (p==="forbidden"&&c==="allowed") return {text:"⚠️ Nur Frachtflugzeug erlaubt (CAO)."};
+  if (p==="allowed"&&c==="forbidden") return {text:"⚠️ Nur Passenger erlaubt – CAO ausgeschlossen."};
+  if (p==="allowed"&&c==="allowed") return {text:"✅ Vollgefahrgut – Versand auf Passenger oder Cargo erlaubt (mit DGD)."};
+  return {text:"ℹ️ Keine eindeutige Empfehlung – manuelle Prüfung nötig."};
+}
+
+document.getElementById('dg-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const un = document.getElementById('un').value.trim();
+  const pg = document.getElementById('pg').value.trim();
+  const weight = parseFloat(document.getElementById('qty').value);
+  const out = document.getElementById('result');
+  if (!un.match(/^\d{4}$/)) {
+    out.innerHTML = '<span class="badge err">Fehler</span><p>Bitte eine gültige vierstellige UN-Nummer eingeben.</p>';
+    return;
+  }
+  const res = checkDG(un, pg, weight);
+  if (res.error) {
+    out.innerHTML = `<span class="badge err">Fehler</span><p>${res.error}</p>`;
+    return;
+  }
+
+  const row = (label, r) => {
+    const cls = r.status==="allowed"?"ok":r.status==="forbidden"?"err":"warn";
+    return `<tr><td>${label}</td><td class="${cls}">${r.text}</td></tr>`;
+  };
+
+  out.innerHTML = `
+    <span class="badge ok">Ergebnis</span>
+    <table class="w-full text-sm border border-gray-300 mt-2">
+      <tr><th>Kategorie</th><th>Bewertung</th></tr>
+      ${row("Passenger", res.passenger)}
+      ${row("Cargo", res.cargo)}
+      ${row("EQ", res.eq)}
+      ${row("LQ", res.lq)}
+      ${row("De Minimis", res.deMinimis)}
+    </table>
+    <div class="mt-3 p-2 border-t border-gray-300">
+      <h4 class="font-semibold">Empfehlung:</h4>
+      <p class="text-blue-700">${res.recommendation.text}</p>
+    </div>
+  `;
+});
+
+document.getElementById('btn-reset').addEventListener('click', ()=>{
+  document.getElementById('dg-form').reset();
+  const out = document.getElementById('result');
+  out.innerHTML='<span class="badge warn">Noch nicht geprüft</span><p>Gib Daten ein und klicke <em>Prüfen</em>.</p>';
+});
+</script>
+</body>
+</html>
