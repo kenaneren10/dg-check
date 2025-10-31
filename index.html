@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DG-Check · Layout-Update v5.1</title>
+  <style>
+    :root{ --brand:#007ac2; --brand-600:#0066a3; --text:#0B1F2A; --muted:#5B6B76; --line:#e6eef2; --panel:#fff;
+           --ok:#1F8A70; --warn:#B58100; --err:#C62828; --radius:14px; --shadow:0 6px 20px rgba(0,0,0,.06);
+           --focus:0 0 0 3px rgba(0,122,194,.25); }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{margin:0;background:#fbfdfe;color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif}
+    header{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--line);box-shadow:0 3px 18px rgba(0,0,0,.03)}
+    .wrap{max-width:980px;margin:auto;padding:1.1rem}
+    .brand{display:flex;gap:1rem;align-items:center}
+    .hex{--size:40px;width:var(--size);height:calc(var(--size)*0.866);position:relative;filter:drop-shadow(0 2px 6px rgba(0,0,0,.08))}
+    .hex:before,.hex:after{content:"";position:absolute;left:0;width:100%;height:100%;border:2px solid var(--brand);border-left:2.5px solid var(--brand);border-right:2.5px solid var(--brand);border-radius:6px;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+    .hex:after{transform:scale(.88);border-color:#BFD9F0}
+    .hex-label{position:absolute;inset:0;display:grid;place-items:center;font-weight:700;font-size:.72rem;color:var(--brand-600);letter-spacing:.06em}
+    h1{font-size:1.05rem;margin:0 0 .1rem 0}
+    .subtitle{color:var(--muted);font-size:.9rem}
+    main{padding:1.2rem 0}
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:1rem 1.1rem;box-shadow:var(--shadow)}
+    .panel h2{margin:.1rem 0 1rem;font-size:1.02rem}
+    form .row{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+    form .row-3{grid-template-columns:1fr 1fr 1fr}
+    @media (max-width:760px){form .row,form .row-3{grid-template-columns:1fr}}
+    label{display:block;font-size:.9rem;color:var(--muted);margin:.35rem 0}
+    .field{display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:12px;padding:.55rem .6rem;gap:.35rem;position:relative}
+    input,select,textarea{background:transparent;border:0;color:var(--text);font-size:1rem;outline:none}
+    textarea{min-height:120px;white-space:pre-wrap}
+    input:focus,select:focus,textarea:focus{box-shadow:var(--focus);border-radius:10px}
+    .hint{font-size:.78rem;color:#215f83}
+    .actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.8rem;align-items:center}
+    button,.btn{border-radius:10px;border:1px solid var(--line);background:#fff;color:#0B1F2A;padding:.65rem .9rem;cursor:pointer;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.04);text-decoration:none;display:inline-block;font-size:1rem}
+    .primary{background:var(--brand);border:1px solid var(--brand);color:#fff}
+    .secondary{background:#fff;border:1px solid var(--line)}
+    .result{display:flex;flex-direction:column;gap:.7rem;border:1px solid var(--line);border-radius:12px;padding:.9rem;background:#fff;margin-top:0.8rem;white-space:pre-line}
+    .badge{padding:.18rem .5rem;border-radius:999px;font-size:.78rem;font-weight:700;display:inline-flex;gap:.4rem;align-items:center}
+    .ok{background:rgba(31,138,112,.12);color:#1F8A70;border:1px solid rgba(31,138,112,.28)}
+    .warn{background:rgba(181,129,0,.1);color:#B58100;border:1px solid rgba(181,129,0,.28)}
+    .err{background:rgba(198,40,40,.1);color:#C62828;border:1px solid rgba(198,40,40,.28)}
+    .line{height:1px;background:var(--line);margin:1rem 0}
+    .pkg-head, .pkg-row{display:grid;align-items:center;gap:.6rem;grid-template-columns: 2fr 1fr 1fr 1fr 28px;}
+    .pkg-head{padding:.2rem .1rem;color:#5B6B76;font-size:.86rem}
+    .pkg-row{margin:.4rem 0}
+    .pkg-row .field{padding:.35rem .5rem}
+    .icon-del{width:28px;height:28px;border:0;background:transparent;color:#C62828;display:flex;align-items:center;justify-content:center;font-weight:900;cursor:pointer;font-size:18px;line-height:1}
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap brand">
+    <div class="hex"><div class="hex-label">DG</div></div>
+    <div>
+      <h1>DG-Check · Decision + Shipper’s Declaration (v5.1)</h1>
+      <div class="subtitle">Automatische Prüfung + Packvorschlag (Zeilenformatiert)</div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="panel">
+    <h2>Sendungsdaten</h2>
+    <form id="dg-form" novalidate>
+      <div class="row-3 row">
+        <div class="field">
+          <label for="un">UN-Nummer</label>
+          <input id="un" inputmode="numeric" pattern="\\d{4}" placeholder="z. B. 1170" required />
+          <span class="hint">Nur 4 Ziffern (UNxxxx)</span>
+        </div>
+        <div class="field">
+          <label for="pg">Verpackungsgruppe</label>
+          <select id="pg"><option value="" selected>Keine / n. a.</option><option>I</option><option>II</option><option>III</option></select>
+        </div>
+        <div class="field">
+          <label for="qty">Nettomenge je Versandstück</label>
+          <input id="qty" type="number" min="0" step="0.001" placeholder="z. B. 0.08" required />
+          <div class="hint">Einheit unten bei Verpackungen</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="primary" id="btn-check">Prüfen</button>
+        <button type="button" class="secondary" id="btn-reset">Zurücksetzen</button>
+      </div>
+
+      <div id="result" class="result">
+        <span class="badge warn">Noch nicht geprüft</span>
+        <p>Gib Daten ein und klicke <em>Prüfen</em>.</p>
+      </div>
+
+      <div class="line"></div>
+
+      <h2>Packvorschlag (optional)</h2>
+      <p class="hint">Direkt kopierbar für SAP-Notiz / Declaration. Jede Verpackung in eigener Zeile, Overpack mit Leerzeile davor.</p>
+
+      <div class="pkg-head">
+        <div>Verpackung</div><div>Anzahl</div><div>Menge je Verpackung</div><div>Einheit</div><div></div>
+      </div>
+      <div id="pkg-list"></div>
+      <div style="margin-top:.3rem"><span class="hint" id="btn-add" style="cursor:pointer">+ Weitere Verpackung hinzufügen</span></div>
+
+      <div class="field"><label><input type="checkbox" id="overpack-global" /> Overpack used (global)</label></div>
+
+      <div class="field">
+        <label>Ergebniszeilen</label>
+        <textarea id="pkg-output" placeholder="1 Fibreboard box x 0.080 kg&#10;1 Plastic drum x 0.090 kg&#10;&#10;Overpack used"></textarea>
+      </div>
+      <div class="actions">
+        <button type="button" class="secondary" id="btn-build">Zeilen erzeugen</button>
+        <button type="button" class="secondary" id="btn-copy">In Zwischenablage</button>
+      </div>
+    </form>
+  </section>
+</main>
+
+<script>
+const pkgList=document.getElementById('pkg-list');
+const btnAdd=document.getElementById('btn-add');
+const btnBuild=document.getElementById('btn-build');
+const btnCopy=document.getElementById('btn-copy');
+const pkgOutput=document.getElementById('pkg-output');
+const overpackGlobal=document.getElementById('overpack-global');
+
+const PACKAGING=["Fibreboard box","Plastic drum","Glass bottle in fibreboard box"];
+
+function createPkgRow(initial){
+  initial=initial||{type:"Fibreboard box",count:1,amount:0.080,unit:"kg"};
+  const row=document.createElement('div');row.className='pkg-row';
+  const fType=document.createElement('div');fType.className='field';
+  const sl=document.createElement('select');
+  PACKAGING.forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;sl.appendChild(o)});
+  sl.value=initial.type;fType.appendChild(sl);row.appendChild(fType);
+  const fCnt=document.createElement('div');fCnt.className='field';
+  const cnt=document.createElement('input');cnt.type='number';cnt.min='1';cnt.step='1';cnt.value=initial.count;fCnt.appendChild(cnt);row.appendChild(fCnt);
+  const fAmt=document.createElement('div');fAmt.className='field';
+  const amt=document.createElement('input');amt.type='number';amt.min='0';amt.step='0.001';amt.value=initial.amount;fAmt.appendChild(amt);row.appendChild(fAmt);
+  const fUnit=document.createElement('div');fUnit.className='field';
+  const unit=document.createElement('select');["kg","g","L","mL"].forEach(u=>{const o=document.createElement('option');o.value=u;o.textContent=u;unit.appendChild(o)});
+  unit.value=initial.unit;fUnit.appendChild(unit);row.appendChild(fUnit);
+  const delWrap=document.createElement('div');const del=document.createElement('button');
+  del.type='button';del.className='icon-del';del.textContent='×';del.addEventListener('click',()=>row.remove());delWrap.appendChild(del);row.appendChild(delWrap);
+  return row;
+}
+
+function buildOutput(){
+  const rows=[...pkgList.querySelectorAll('.pkg-row')];
+  const lines=rows.map(r=>{
+    const type=r.children[0].querySelector('select').value;
+    const cnt=r.children[1].querySelector('input').value;
+    const amt=r.children[2].querySelector('input').value;
+    const unit=r.children[3].querySelector('select').value;
+    return `${cnt} ${type} x ${Number(amt).toFixed(3)} ${unit}`;
+  });
+  if (overpackGlobal.checked){ lines.push('', 'Overpack used'); }
+  pkgOutput.value = lines.join('\\n');
+}
+
+btnAdd.addEventListener('click',()=>pkgList.appendChild(createPkgRow()));
+btnBuild.addEventListener('click',buildOutput);
+btnCopy.addEventListener('click',()=>{pkgOutput.select();document.execCommand('copy');});
+pkgList.appendChild(createPkgRow());
+</script>
+</body>
+</html>
