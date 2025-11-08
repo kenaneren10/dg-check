@@ -93,7 +93,7 @@
       <div class="line"></div>
 
       <h2>Packvorschlag (optional)</h2>
-      <p class="hint">Direkt kopierbar für SAP-Notiz / Declaration. Jede Verpackung in eigener Zeile, Overpack mit Leerzeile davor.</p>
+      <p class="hint">Direkt kopierbar für LAL</p>
 
       <div class="pkg-head">
         <div>Verpackung</div><div>Anzahl</div><div>Menge je Verpackung</div><div>Einheit</div><div></div>
@@ -154,13 +154,136 @@ function buildOutput(){
     return `${cnt} ${type} x ${Number(amt).toFixed(3)} ${unit}`;
   });
   if (overpackGlobal.checked){ lines.push('', 'Overpack used'); }
-  pkgOutput.value = lines.join('\\n');
+  pkgOutput.value = lines.join('\n');
 }
 
 btnAdd.addEventListener('click',()=>pkgList.appendChild(createPkgRow()));
 btnBuild.addEventListener('click',buildOutput);
 btnCopy.addEventListener('click',()=>{pkgOutput.select();document.execCommand('copy');});
 pkgList.appendChild(createPkgRow());
+
+  // ---------------------------------------------
+// DG Check Logik (UN + PG + Menge)
+// ---------------------------------------------
+let DG_DATABASE = {};
+
+fetch('./iata_data_ready.json') // bei GitHub Pages passt das (liegt neben index.html)
+  .then(r => r.json())
+  .then(data => DG_DATABASE = data)
+  .catch(err => console.error("Fehler beim Laden der IATA-Daten:", err));
+
+const form = document.getElementById("dg-form");
+const resultBox = document.getElementById("result");
+
+form.addEventListener("submit", e => {
+  e.preventDefault();
+  const un = document.getElementById("un").value.trim();
+  const pg = document.getElementById("pg").value.trim();
+  const qtyRaw = (document.getElementById("qty").value || '').trim();
+  const qty = parseFloat(qtyRaw.replace(',', '.')) || 0;
+
+  const res = runDGCheck(un, pg, qty);
+  renderDGResult(un, res);
+});
+
+function toNum(x){
+  if (x === "verboten" || x == null) return null;
+  const n = parseFloat(String(x).replace(',', '.'));
+  return Number.isFinite(n) ? n : null;
+}
+
+const EQ_TABLE = {
+  E0:{allowed:false}, E1:{allowed:true,maxInnerPkg:0.03,maxOuterPkg:1},
+  E2:{allowed:true,maxInnerPkg:0.5,maxOuterPkg:1},
+  E3:{allowed:true,maxInnerPkg:1,maxOuterPkg:1},
+  E4:{allowed:true,maxInnerPkg:0.5,maxOuterPkg:1},
+  E5:{allowed:true,maxInnerPkg:1,maxOuterPkg:1}
+};
+
+function runDGCheck(un, pg, weight){
+  const data = DG_DATABASE["UN" + un];
+  if (!data) return {error:`Keine Daten für UN ${un}`};
+  const group = (data.PackingGroups && (data.PackingGroups[pg] || data.PackingGroups["—"])) || null;
+  if (!group) return {error:`Keine Verpackungsgruppe ${pg || 'n. a.'} für UN ${un}`};
+
+  // Passenger
+  const maxP = toNum(group.Passenger?.MaxNetQuantityPerPackage);
+  let passenger;
+  if (group.Passenger?.MaxNetQuantityPerPackage === "verboten") passenger = {status:"forbidden", text:"❌ Verboten (Passenger)"};
+  else if (maxP != null && weight <= maxP) passenger = {status:"allowed", text:`✅ Erlaubt bis ${group.Passenger.MaxNetQuantityPerPackage} (PI ${group.Passenger.PI})`};
+  else if (maxP != null) passenger = {status:"exceed", text:"❌ Gewicht überschreitet Limit (Passenger)"};
+  else passenger = {status:"unknown", text:"⚠️ Keine Angabe"};
+
+  // Cargo
+  const maxC = toNum(group.Cargo?.MaxNetQuantityPerPackage);
+  let cargo;
+  if (group.Cargo?.MaxNetQuantityPerPackage === "verboten") cargo = {status:"forbidden", text:"❌ Verboten (Cargo)"};
+  else if (maxC != null && weight <= maxC) cargo = {status:"allowed", text:`✅ Erlaubt bis ${group.Cargo.MaxNetQuantityPerPackage} (PI ${group.Cargo.PI})`};
+  else if (maxC != null) cargo = {status:"exceed", text:"❌ Gewicht überschreitet Limit (Cargo)"};
+  else cargo = {status:"unknown", text:"⚠️ Keine Angabe"};
+
+  // EQ
+  const eqCode = group.EQ;
+  const eqRef = EQ_TABLE[eqCode];
+  let eq;
+  if (!eqRef) eq = {status:"unknown", text:"❌ Kein EQ-Code"};
+  else if (!eqRef.allowed) eq = {status:"forbidden", text:"❌ EQ nicht erlaubt"};
+  else if (weight <= eqRef.maxInnerPkg) eq = {status:"allowed", text:`✅ EQ erlaubt (max ${eqRef.maxInnerPkg} kg)`};
+  else eq = {status:"exceed", text:`❌ Überschreitet EQ-Grenze (${eqRef.maxInnerPkg} kg)`};
+
+  // LQ
+  const lqVal = toNum(group.LQ);
+  let lq;
+  if (group.LQ === "verboten" || lqVal == null) lq = {status:"forbidden", text:"❌ LQ nicht erlaubt"};
+  else lq = (weight <= lqVal) ? {status:"allowed", text:`✅ LQ erlaubt (max ${group.LQ})`} : {status:"exceed", text:`❌ LQ überschritten (${group.LQ})`};
+
+  // De Minimis
+  const restricted = ["1","2","5.2","6.2","7"];
+  let dm;
+  if (restricted.includes(data.Class)) dm = {status:"forbidden", text:"❌ Keine De-Minimis-Regel (Klasse)"};
+  else if (!group.DeMinimis) dm = {status:"forbidden", text:"❌ Nicht erlaubt laut DGR 2.6"};
+  else if (weight < 0.001) dm = {status:"allowed", text:"✅ De Minimis anwendbar (<1 g / ml)"};
+  else dm = {status:"exceed", text:"❌ Gewicht zu hoch für De Minimis"};
+
+  // Empfehlung
+  const recommendation =
+    dm.status==="allowed" ? "✅ Versand als De-Minimis-Sendung ohne Deklaration möglich."
+  : eq.status==="allowed" ? "✅ Versand als Excepted Quantity (EQ) möglich – bevorzugt."
+  : lq.status==="allowed" ? "✅ Versand als Limited Quantity (LQ) möglich – Kennzeichnung erforderlich."
+  : (passenger.status==="forbidden" && cargo.status==="allowed") ? "⚠️ Nur Frachtflugzeug erlaubt (CAO)."
+  : (passenger.status==="allowed" && cargo.status==="forbidden") ? "⚠️ Nur Passenger erlaubt – CAO ausgeschlossen."
+  : (passenger.status==="allowed" && cargo.status==="allowed") ? "✅ Vollgefahrgut – Passenger oder Cargo erlaubt (mit DGD)."
+  : "ℹ️ Keine eindeutige Empfehlung – manuelle Prüfung nötig.";
+
+  return {passenger, cargo, eq, lq, dm, recommendation};
+}
+
+function renderDGResult(un, r){
+  if (r.error){
+    resultBox.innerHTML = `<span class="badge err">Fehler</span><p>${r.error}</p>`;
+    return;
+  }
+  const row = (label, obj) => {
+    const cls = obj.status==="allowed"?"ok":obj.status==="forbidden"?"err":"warn";
+    return `<tr><td>${label}</td><td class="${cls}">${obj.text}</td></tr>`;
+  };
+  resultBox.innerHTML = `
+    <span class="badge ok">Ergebnis</span>
+    <table class="w-full text-sm border border-gray-300 mt-2">
+      <tr><th style="text-align:left">Kategorie</th><th style="text-align:left">Bewertung</th></tr>
+      ${row("Passenger", r.passenger)}
+      ${row("Cargo", r.cargo)}
+      ${row("EQ", r.eq)}
+      ${row("LQ", r.lq)}
+      ${row("De Minimis", r.dm)}
+    </table>
+    <div class="mt-3 p-2" style="border-top:1px solid var(--line)">
+      <h4 class="font-semibold" style="margin:.2rem 0">Empfehlung:</h4>
+      <p style="color:#0d58a0;margin:.2rem 0 0">${r.recommendation}</p>
+    </div>
+  `;
+}
+
 </script>
 </body>
 </html>
